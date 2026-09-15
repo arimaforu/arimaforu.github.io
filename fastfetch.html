@@ -17,7 +17,29 @@
   --orange:#FFB866;
 }
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%}
+html,body{
+  margin:0;
+  min-height:100%;
+
+  /* Hide scrollbars across modern and legacy engines */
+  scrollbar-width:none;        /* Firefox */
+  -ms-overflow-style:none;     /* IE 10/11 + old Edge */
+  scrollbar-color:transparent transparent;
+}
+
+/* Chromium, Chrome, Edge, Opera, Safari, older WebKit */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar{
+  width:0;
+  height:0;
+  display:none;
+  background:transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb{
+  background:transparent;
+}
 body{
   min-height:100vh;
   color:var(--text);
