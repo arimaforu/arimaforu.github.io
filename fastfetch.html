@@ -268,23 +268,23 @@ body::after{
         </div>
         <div class="row">
           <div class="key">├─ RAM</div>
-          <div class="value">23.68 GiB / 31.79 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■■■■■■■■■</span><span class="empty">···</span><span class="edge">]</span></span> <span class="ram-percent">74%</span></div>
+          <div class="value" id="ramValue"></div>
         </div>
         <div class="row">
           <div class="key">├─ SWAP</div>
-          <div class="value">2.32 GiB / 15.83 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■</span><span class="empty">···········</span><span class="edge">]</span></span> <span class="ram-percent">15%</span></div>
+          <div class="value" id="swapValue"></div>
         </div>
         <div class="row">
           <div class="key">├─ DRIVE</div>
-          <div class="value">C:\ 753.26 GiB / 930.42 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■■■■■■■■■■</span><span class="empty">··</span><span class="edge">]</span></span> <span class="drive-percent">81%</span></div>
+          <div class="value" id="driveCValue"></div>
         </div>
         <div class="row">
           <div class="key">├─ DRIVE</div>
-          <div class="value">D:\ 536.04 GiB / 931.50 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■■■■■■■</span><span class="empty">·····</span><span class="edge">]</span></span> <span class="drive-percent">58%</span></div>
+          <div class="value" id="driveDValue"></div>
         </div>
         <div class="row">
           <div class="key">└─ DRIVE</div>
-          <div class="value">E:\ 183.22 GiB / 931.48 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■■</span><span class="empty">··········</span><span class="edge">]</span></span> <span class="drive-percent">20%</span></div>
+          <div class="value" id="driveEValue"></div>
         </div>
 
         <div class="box">└──────────────────────────────────────────┘</div>
@@ -300,15 +300,15 @@ body::after{
         </div>
         <div class="row">
           <div class="key">├─ DOWN</div>
-          <div class="value network-speed">88.36 <span>Mbps</span></div>
+          <div class="value network-speed" id="downValue"></div>
         </div>
         <div class="row">
           <div class="key">├─ UP</div>
-          <div class="value network-speed">90.27 <span>Mbps</span></div>
+          <div class="value network-speed" id="upValue"></div>
         </div>
         <div class="row">
           <div class="key">└─ PING</div>
-          <div class="value">17 ms</div>
+          <div class="value" id="pingValue"></div>
         </div>
         <div class="box">└──────────────────────────────────────────┘</div>
       </section>
@@ -430,6 +430,75 @@ body::after{
   const loginAt = new Date();
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local";
 
+  // Cosmetic live-ish stats for the fastfetch look. Values are generated locally
+  // in the browser and are not real measurements.
+  const stats = {
+    ram: 74,
+    swap: 15,
+    driveC: 81,
+    driveD: 58,
+    driveE: 20,
+    down: 88.36,
+    up: 90.27,
+    ping: 17
+  };
+
+  const ranges = {
+    ram: [52, 78],
+    swap: [6, 24],
+    driveC: [76, 88],
+    driveD: [50, 68],
+    driveE: [13, 28],
+    down: [55, 98],
+    up: [58, 98],
+    ping: [12, 29]
+  };
+
+  const clamp = (v, min, max) => Math.min(max, Math.max(min, v));
+  const drift = (value, [min, max], step) =>
+    clamp(value + (Math.random() * 2 - 1) * step, min, max);
+
+  const bar = (percent, width = 10) => {
+    const filled = Math.round((percent / 100) * width);
+    return `[${'■'.repeat(filled)}${'·'.repeat(width - filled)}]`;
+  };
+
+  const setDynamicStats = () => {
+    stats.ram = drift(stats.ram, ranges.ram, 3.4);
+    stats.swap = drift(stats.swap, ranges.swap, 2.2);
+    stats.driveC = drift(stats.driveC, ranges.driveC, 2.2);
+    stats.driveD = drift(stats.driveD, ranges.driveD, 2.8);
+    stats.driveE = drift(stats.driveE, ranges.driveE, 2.4);
+    stats.down = drift(stats.down, ranges.down, 8.5);
+    stats.up = drift(stats.up, ranges.up, 8.5);
+    stats.ping = drift(stats.ping, ranges.ping, 2.8);
+
+    const ramUsed = (31.79 * stats.ram / 100);
+    const swapUsed = (15.83 * stats.swap / 100);
+    const cUsed = (930.42 * stats.driveC / 100);
+    const dUsed = (931.50 * stats.driveD / 100);
+    const eUsed = (931.48 * stats.driveE / 100);
+
+    document.getElementById('ramValue').innerHTML =
+      `${ramUsed.toFixed(2)} GiB / 31.79 GiB <span class="ffbar">${bar(stats.ram)}</span> <span class="ram-percent">${Math.round(stats.ram)}%</span>`;
+
+    document.getElementById('swapValue').innerHTML =
+      `${swapUsed.toFixed(2)} GiB / 15.83 GiB <span class="ffbar">${bar(stats.swap)}</span> <span class="ram-percent">${Math.round(stats.swap)}%</span>`;
+
+    document.getElementById('driveCValue').innerHTML =
+      `C:\\ ${cUsed.toFixed(2)} GiB / 930.42 GiB <span class="ffbar">${bar(stats.driveC)}</span> <span class="drive-percent">${Math.round(stats.driveC)}%</span>`;
+
+    document.getElementById('driveDValue').innerHTML =
+      `D:\\ ${dUsed.toFixed(2)} GiB / 931.50 GiB <span class="ffbar">${bar(stats.driveD)}</span> <span class="drive-percent">${Math.round(stats.driveD)}%</span>`;
+
+    document.getElementById('driveEValue').innerHTML =
+      `E:\\ ${eUsed.toFixed(2)} GiB / 931.48 GiB <span class="ffbar">${bar(stats.driveE)}</span> <span class="drive-percent">${Math.round(stats.driveE)}%</span>`;
+
+    document.getElementById('downValue').innerHTML = `${stats.down.toFixed(2)} <span>Mbps</span>`;
+    document.getElementById('upValue').innerHTML = `${stats.up.toFixed(2)} <span>Mbps</span>`;
+    document.getElementById('pingValue').textContent = `${Math.round(stats.ping)} ms`;
+  };
+
   document.getElementById("timezone").textContent = tz.replaceAll("_"," ");
 
   function update(){
@@ -473,8 +542,10 @@ body::after{
     login.textContent = `Session ${name} // ${loginDate}, ${loginTime}`;
   }
 
+  setDynamicStats();
   update();
   setInterval(update,1000);
+  setInterval(setDynamicStats,2500);
 })();
 </script>
 </body>
