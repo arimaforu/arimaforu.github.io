@@ -1,0 +1,459 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>fastfetch // profile</title>
+<style>
+:root{
+  --bg:#080c0a;
+  --key:#B7E39A;
+  --title:#C6E8C0;
+  --text:#F0F2E8;
+  --line:#68745F;
+  --green:#7FA34A;
+  --dim:#59664F;
+  --yellow:#C1B65A;
+  --orange:#FFB866;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  min-height:100vh;
+  color:var(--text);
+  background:var(--bg);
+  font:15px/1.45 "JetBrains Mono","Cascadia Mono","SFMono-Regular",Consolas,monospace;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";
+  position:fixed;
+  z-index:-2;
+  inset:-70px;
+  background:
+    linear-gradient(rgba(3,7,5,.34),rgba(3,7,5,.40)),
+    url("https://i.pinimg.com/736x/4c/80/03/4c800301612264273c54087efbe8df01.jpg")
+    center/cover no-repeat;
+  filter:blur(34px);
+  transform:scale(1.08);
+}
+body::after{
+  content:"";
+  position:fixed;
+  z-index:-1;
+  inset:0;
+  background:radial-gradient(ellipse at center,rgba(0,0,0,.02) 20%,rgba(0,0,0,.30) 100%);
+  pointer-events:none;
+}
+
+/* One centered terminal, with the logo and text kept in one grid row. */
+.shell{
+  width:min(1080px,calc(100vw - 56px));
+  margin:38px auto;
+}
+.layout{
+  display:grid;
+  grid-template-columns:170px minmax(0,1fr);
+  gap:34px;
+  align-items:start;
+}
+.logo{
+  width:170px;
+  padding-top:2px;
+  text-align:center;
+}
+.logo pre{
+  display:inline-block;
+  margin:0;
+  color:var(--green);
+  font:9px/1 "JetBrains Mono","Cascadia Mono",monospace;
+  text-align:left;
+  opacity:.88;
+}
+.content{min-width:0}
+.terminal-version{position:fixed;top:14px;left:18px;color:var(--text);font:13px/1 "JetBrains Mono","Cascadia Mono",monospace;font-weight:400;opacity:.82;z-index:5}
+.greeting{
+  height:25px;
+  margin:0 0 16px;
+  color:var(--text);
+  font-weight:700;
+}
+.greeting .user{color:var(--green)}
+.cursor{
+  display:inline-block;
+  width:4px;
+  height:12px;
+  margin-left:3px;
+  vertical-align:-1px;
+  background:var(--green);
+  transform-origin:center;
+  border-radius:1px;
+  animation:cursor 1.9s cubic-bezier(.65,.05,.35,.95) infinite;
+}
+@keyframes cursor{
+  0%,34%,100%{transform:scaleY(1);opacity:1}
+  57%{transform:scaleY(.18);opacity:.78}
+  80%{transform:scaleY(1);opacity:1}
+}
+
+.block{width:100%;margin:0 0 18px}
+.box{
+  width:100%;
+  overflow:hidden;
+  white-space:pre;
+  color:var(--line);
+  line-height:19px;
+  height:19px;
+}
+.box .accent{color:var(--green)}
+.box.session .accent{color:#82A85A}
+.box.time .accent{color:var(--yellow)}
+
+.row{
+  width:100%;
+  min-height:25px;
+  display:grid;
+  grid-template-columns:15ch minmax(0,1fr);
+  align-items:baseline;
+  line-height:25px;
+}
+.key{
+  color:var(--green);
+  font-weight:700;
+  white-space:pre;
+}
+.value{
+  min-width:0;
+  color:var(--text);
+  overflow-wrap:anywhere;
+}
+.network .key{color:var(--green)}
+.network-speed{font-size:15px;font-weight:600;letter-spacing:.01em}
+.network-speed span{font-weight:400;color:var(--text)}
+
+.session .key{color:#82A85A}
+.time .key{color:var(--yellow)}
+
+
+
+
+
+.ffbar{
+  display:inline-block;
+  margin-left:1ch;
+  white-space:pre;
+  font-family:"JetBrains Mono","Cascadia Mono","SFMono-Regular",Consolas,monospace;
+  font-size:13px;
+  line-height:1;
+  letter-spacing:0;
+}
+.ffbar .edge{color:var(--border)}
+.ffbar .fill{color:var(--green)}
+.ffbar .empty{color:var(--dim)}
+
+.ram-percent{color:var(--key)}
+.drive-percent{color:var(--green)}
+.network strong{font-weight:700;color:var(--text)}
+
+.links .row{min-height:28px;line-height:28px}
+.link{
+  color:var(--text);
+  text-decoration:none;
+  transition:color .15s;
+}
+.link:hover{color:var(--key)}
+.link-arrow{color:var(--green)}
+
+.footer{
+  color:var(--orange);
+  font-weight:700;
+  margin-top:0;
+}
+.footer-text{font-weight:700}
+.ip-hidden{color:var(--dim)}
+.dots{
+  display:flex;
+  gap:12px;
+  padding-left:1px;
+  margin-top:10px;
+}
+.dot{
+  width:11px;height:11px;border-radius:50%;
+  background:#4b5a5b;
+}
+.dot:nth-child(2){background:#d6c890}
+.dot:nth-child(3){background:#89c39a}
+.dot:nth-child(4){background:#777965}
+.dot:nth-child(5){background:#75b9ae}
+.dot:nth-child(6){background:#d5bd65}
+.dot:nth-child(7){background:#99b66d}
+.dot:nth-child(8){background:#79576f}
+
+@media(max-width:760px){
+  .shell{width:calc(100vw - 24px);margin:20px auto}
+  .layout{display:block}
+  .logo{
+    width:auto;
+    height:68px;
+    text-align:left;
+    overflow:hidden;
+    margin-bottom:10px;
+  }
+  .logo pre{font-size:7px}
+  body{font-size:13px}
+  .row{grid-template-columns:12ch minmax(0,1fr)}
+}
+</style>
+</head>
+
+<body>
+<div class="terminal-version">PowerShell 7.6.6</div>
+<div class="shell">
+  <div class="layout">
+
+    <aside class="logo" aria-hidden="true">
+<pre>       /\
+      /  \
+     / /\ \
+    / /  \ \
+   /_/ /\ \_\
+      /  \
+     / /\ \
+    / /  \ \
+   /_/    \_\
+      ||||
+   ___||||___
+  /___/  \___\
+     EAGLE</pre>
+    </aside>
+
+    <main class="content">
+
+      <div class="greeting">
+        Hey, <span class="user" id="username">Guest</span><span class="cursor"></span>
+      </div>
+
+      <section class="block hardware">
+        <div class="box">┌────────────────<span class="accent"> Hardware </span>────────────────┐</div>
+
+        <div class="row">
+          <div class="key">├─ CPU</div>
+          <div class="value">12th Gen Intel(R) Core(TM) i5-12400F (6C / 12T) @ 4.40 GHz</div>
+        </div>
+        <div class="row">
+          <div class="key">├─ GPU</div>
+          <div class="value">NVIDIA GeForce RTX 4060 [Discrete] // 7.77 GiB</div>
+        </div>
+        <div class="row">
+          <div class="key">├─ RAM</div>
+          <div class="value">23.68 GiB / 31.79 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■■■■■■■■■</span><span class="empty">···</span><span class="edge">]</span></span> <span class="ram-percent">74%</span></div>
+        </div>
+        <div class="row">
+          <div class="key">├─ SWAP</div>
+          <div class="value">2.32 GiB / 15.83 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■</span><span class="empty">···········</span><span class="edge">]</span></span> <span class="ram-percent">15%</span></div>
+        </div>
+        <div class="row">
+          <div class="key">├─ DRIVE</div>
+          <div class="value">C:\ 753.26 GiB / 930.42 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■■■■■■■■■■</span><span class="empty">··</span><span class="edge">]</span></span> <span class="drive-percent">81%</span></div>
+        </div>
+        <div class="row">
+          <div class="key">├─ DRIVE</div>
+          <div class="value">D:\ 536.04 GiB / 931.50 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■■■■■■■</span><span class="empty">·····</span><span class="edge">]</span></span> <span class="drive-percent">58%</span></div>
+        </div>
+        <div class="row">
+          <div class="key">└─ DRIVE</div>
+          <div class="value">E:\ 183.22 GiB / 931.48 GiB <span class="ffbar"><span class="edge">[</span><span class="fill">■■■</span><span class="empty">··········</span><span class="edge">]</span></span> <span class="drive-percent">20%</span></div>
+        </div>
+
+        <div class="box">└──────────────────────────────────────────┘</div>
+      </section>
+
+
+
+      <section class="block network">
+        <div class="box">┌────────────────<span class="accent"> Network </span>─────────────────┐</div>
+        <div class="row">
+          <div class="key">├─ IP</div>
+          <div class="value ip-hidden">hidden</div>
+        </div>
+        <div class="row">
+          <div class="key">├─ DOWN</div>
+          <div class="value network-speed">88.36 <span>Mbps</span></div>
+        </div>
+        <div class="row">
+          <div class="key">├─ UP</div>
+          <div class="value network-speed">90.27 <span>Mbps</span></div>
+        </div>
+        <div class="row">
+          <div class="key">└─ PING</div>
+          <div class="value">17 ms</div>
+        </div>
+        <div class="box">└──────────────────────────────────────────┘</div>
+      </section>
+
+      <section class="block session">
+        <div class="box">┌─────────────────<span class="accent"> Session </span>────────────────┐</div>
+        <div class="row">
+          <div class="key">├─ LOGIN</div>
+          <div class="value" id="login">Guest // --</div>
+        </div>
+        <div class="row">
+          <div class="key">├─ RANDOM ID</div>
+          <div class="value" id="randomId">session: ------</div>
+        </div>
+        <div class="row">
+          <div class="key">└─ VISITORS</div>
+          <div class="value">?</div>
+        </div>
+        <div class="box">└──────────────────────────────────────────┘</div>
+      </section>
+
+      <section class="block time">
+        <div class="box">┌──────────────<span class="accent"> Uptime / Date </span>──────────────┐</div>
+        <div class="row">
+          <div class="key">├─ UPTIME</div>
+          <div class="value" id="uptime">0 hours, 0 mins, 0 secs</div>
+        </div>
+        <div class="row">
+          <div class="key">├─ DATE</div>
+          <div class="value" id="date">----</div>
+        </div>
+        <div class="row">
+          <div class="key">├─ CLOCK</div>
+          <div class="value" id="clock">00:00:00</div>
+        </div>
+        <div class="row">
+          <div class="key">└─ ZONE</div>
+          <div class="value" id="timezone">Detecting...</div>
+        </div>
+        <div class="box">└──────────────────────────────────────────┘</div>
+      </section>
+
+      <section class="block links">
+        <div class="box">┌──────────────────<span class="accent"> Links </span>──────────────────┐</div>
+        <div class="row">
+          <div class="key">├─ TG</div>
+          <div class="value"><a class="link" href="https://t.me/satorugojojujutsu" target="_blank" rel="noopener">@satorugojojujutsu <span class="link-arrow">↗</span></a></div>
+        </div>
+        <div class="row">
+          <div class="key">├─ TGK</div>
+          <div class="value"><a class="link" href="https://t.me/xhttpip" target="_blank" rel="noopener">@xhttpip <span class="link-arrow">↗</span></a></div>
+        </div>
+        <div class="row">
+          <div class="key">├─ STEAM</div>
+          <div class="value"><a class="link" href="https://steamcommunity.com/id/sugurugetojjk/" target="_blank" rel="noopener">sugurugetojjk <span class="link-arrow">↗</span></a></div>
+        </div>
+        <div class="row">
+          <div class="key">└─ DISCORD</div>
+          <div class="value">remadedays</div>
+        </div>
+        <div class="box">└──────────────────────────────────────────┘</div>
+      </section>
+
+      <footer class="footer">
+        <span id="footerText">Bonsoir! <span id="footerName">Guest</span>.</span>
+        <div class="dots">
+          <i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+          <i class="dot"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+        </div>
+      </footer>
+
+    </main>
+  </div>
+</div>
+
+<script>
+(() => {
+  const params = new URLSearchParams(location.search);
+  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+
+  const candidates = [
+    telegramUser?.username,
+    params.get("user"),
+    params.get("username"),
+    params.get("name"),
+    localStorage.getItem("fastfetch_username")
+  ];
+
+  const name = (candidates.find(v => v && v.trim()) || "Guest")
+    .trim().replace(/^@/,"");
+
+  localStorage.setItem("fastfetch_username", name);
+
+  const username = document.getElementById("username");
+  const footerName = document.getElementById("footerName");
+  const footerText = document.getElementById("footerText");
+  const login = document.getElementById("login");
+  const randomId = document.getElementById("randomId");
+  randomId.textContent = `session: ${Math.random().toString(16).slice(2,8).padEnd(6,"0")}`;
+
+  const footerPhrases = [
+    name => `Bonsoir! ${name}.`,
+    name => `well, hello ${name}.`,
+    () => `oh, you're here.`,
+    () => `what are you doing here?`,
+    () => `welcome, I guess.`,
+    () => `everything seems fine.`,
+    () => `still messing with Windows.`,
+    () => `I probably broke something.`,
+    () => `nothing interesting here.`,
+    () => `just looking around?`
+  ];
+
+  username.textContent = name;
+
+  const footerPhrase = footerPhrases[Math.floor(Math.random() * footerPhrases.length)](name);
+  footerText.textContent = footerPhrase;
+
+  const loginAt = new Date();
+  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "Local";
+
+  document.getElementById("timezone").textContent = tz.replaceAll("_"," ");
+
+  function update(){
+    const now = new Date();
+
+    const dateParts = new Intl.DateTimeFormat("en-GB",{
+      timeZone:tz,
+      day:"2-digit",month:"2-digit",year:"numeric"
+    }).formatToParts(now);
+    const date = `${dateParts.find(p=>p.type==="day").value}.${dateParts.find(p=>p.type==="month").value}.${dateParts.find(p=>p.type==="year").value}`;
+
+    const clock = new Intl.DateTimeFormat("en-GB",{
+      timeZone:tz,
+      hour:"2-digit",minute:"2-digit",second:"2-digit",
+      hour12:false
+    }).format(now);
+
+    document.getElementById("date").textContent = date;
+    document.getElementById("clock").textContent = clock;
+
+    const elapsed = Math.floor((now - loginAt) / 1000);
+    const h = Math.floor(elapsed / 3600);
+    const m = Math.floor((elapsed % 3600) / 60);
+    const s = elapsed % 60;
+
+    document.getElementById("uptime").textContent =
+      `${h} hours, ${m} mins, ${s} secs`;
+
+    const loginParts = new Intl.DateTimeFormat("en-GB",{
+      timeZone:tz,
+      day:"2-digit",month:"2-digit",year:"numeric",
+      hour:"2-digit",minute:"2-digit",second:"2-digit",
+      hour12:false
+    }).formatToParts(loginAt);
+
+    const loginDate =
+      `${loginParts.find(p=>p.type==="day").value}.${loginParts.find(p=>p.type==="month").value}.${loginParts.find(p=>p.type==="year").value}`;
+    const loginTime =
+      `${loginParts.find(p=>p.type==="hour").value}:${loginParts.find(p=>p.type==="minute").value}:${loginParts.find(p=>p.type==="second").value}`;
+
+    login.textContent = `Session ${name} // ${loginDate}, ${loginTime}`;
+  }
+
+  update();
+  setInterval(update,1000);
+})();
+</script>
+</body>
+</html>
